@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwp6qpameolca"]
+
+[ext_resource type="PackedScene" uid="uid://bcjtquemseyv7" path="res://assets/HighVoltageTower_Base01.glb" id="1_oukbu"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_oukbu"]
+size = Vector3(1, 2, 1)
+
+[node name="HighVoltageTower" type="Node3D"]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.554626, 0)
+shape = SubResource("BoxShape3D_oukbu")
+
+[node name="HighVoltageTower_Base01" parent="StaticBody3D" instance=ExtResource("1_oukbu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.421589, 0)

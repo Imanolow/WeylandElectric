@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Loops</title>
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Evita scroll */
+        }
+        body {
+            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Evita scroll */
+        }
+        .top-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100vw;
+            margin-bottom: 0;
+            z-index: 2;
+            position: relative;
+        }
+        .game-title {
+            font-size: 2.8rem; /* antes 4.2rem */
+            font-weight: bold;
+            margin-top: 6px;   /* antes 12px */
+            margin-bottom: 0;  /* antes 2px */
+            letter-spacing: 2px;
+            text-align: center;
+            color: var(--main-color, #535353); /* Color sólido de la paleta */
+            text-shadow: 0 4px 24px rgba(0,0,0,0.13), 0 1px 0 #fff;
+            user-select: none;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            -webkit-text-fill-color: unset !important;
+            background-clip: unset !important;
+        }
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        .instructions {
+            max-width: 600px;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #535353;
+            line-height: 1.4;
+            font-size: 1rem;
+        }
+        .game-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100vw;
+            position: relative;
+            margin-bottom: 0;
+            padding: 0 8px;    /* antes 0 16px */
+            min-height: 24px;  /* antes 36px */
+            box-sizing: border-box;
+        }
+        .header-spacer {
+            flex: 1 1 auto;
+        }
+        .score {
+            font-size: 20px;
+            color: #535353;
+            text-align: right;
+        }
+        .game-canvas {
+            border: 2px solid #535353;
+            background-color: #f7f5f3;
+            cursor: crosshair;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: block;
+            width: 100vw;
+            height: calc(100vh - 140px);
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border: 3px solid #535353;
+            text-align: center;
+            font-size: 24px;
+            color: #535353;
+            display: none;
+            z-index: 10;
+        }
+        .restart-btn {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #535353;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .restart-btn:hover {
+            background: #333;
+        }
+        .palette-btn {
+            margin: 8px 0 10px 0;
+            padding: 8px 18px;
+            font-size: 1.1rem;
+            background: var(--main-color, #535353);
+            color: #fff;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.3s, color 0.3s;
+        }
+        .palette-btn:hover {
+            background: #222;
+            color: #b2ffb2;
+        }
+        .button-row {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        /* --- Responsive para móviles --- */
+@media (max-width: 600px) {
+    html, body {
+        width: 100vw;
+        height: 100vh;
+        min-width: 100vw;
+        min-height: 100vh;
+        overflow: auto;
+    }
+    .top-container {
+        width: 100vw;
+        padding: 0 2vw;
+    }
+    .game-title {
+        font-size: 1.5rem;
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
+    .button-row {
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 2px;
+    }
+    .palette-btn, #langBtn {
+        font-size: 1em;
+        padding: 7px 10px;
+        border-radius: 14px;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+    .instructions {
+        font-size: 0.95em;
+        max-width: 98vw;
+        margin-bottom: 4px;
+        padding: 0 2vw;
+    }
+    .game-header {
+        min-height: 18px;
+        padding: 0 2vw;
+        font-size: 0.95em;
+    }
+    .restart-btn {
+        font-size: 1em;
+        padding: 7px 10px;
+    }
+    .score {
+        font-size: 1em;
+    }
+    .game-canvas {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: calc(100vh - 170px) !important;
+        max-height: 60vh !important;
+        min-height: 220px;
+        border-width: 1.5px;
+    }
+    .game-over {
+        font-size: 1.1em;
+        padding: 18px 4vw;
+        border-width: 2px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="top-container">
+        <div class="game-title" id="gameTitle">SIGNAL LOOPS</div>
+        <div class="button-row">
+            <button id="paletteBtn" class="palette-btn">Change Palette</button>
+            <button id="langBtn" class="palette-btn">Español</button>
+        </div>
+        <div class="instructions" id="instructions">
+            Hold click to preview and release to place the antenna. Don't let the lines cross!
+        </div>
+        <div class="game-header">
+            <button class="restart-btn" id="restartBtn" onclick="restartGame()">Restart</button>
+            <div class="header-spacer"></div>
+            <div class="score" id="scoreLabel">Score: <span id="score">0</span></div>
+        </div>
+    </div>
+    <canvas id="gameCanvas" class="game-canvas"></canvas>
+    <div id="gameOver" class="game-over">
+        <div id="gameOverTitle">GAME OVER!</div>
+        <div id="gameOverReason" style="font-size: 18px; margin-top: 10px;">Lines have crossed</div>
+        <div id="finalScoreLabel" style="font-size: 16px; margin-top: 10px;">Final score: <span id="finalScore">0</span></div>
+        <button class="restart-btn" id="restartBtn2" onclick="restartGame()">Play again</button>
+    </div>
+    <script>
+        // Paletas de color
+const palettes = [
+    // [main, bg1, bg2, accent, bonus, grad1, grad2]
+    ["#535353", "#f7f5f3", "#e0e0e0", "#bdbdbd", "#e6b800", "#535353", "#bdbdbd"], // original
+    ["#0f0", "#000", "#222", "#0ff", "#fff", "#0f0", "#0ff"], // matrix
+    ["#1e1e2f", "#0a0a1a", "#2e2e6f", "#ff2e9a", "#00ffe7", "#ff2e9a", "#00ffe7"], // azul y rosa
+    ["#1a3d1a", "#eaffd0", "#bada55", "#bada55", "#ffe600", "#bada55", "#ffe600"], // verde y amarillo
+    ["#222", "#fff", "#e0e0e0", "#ff6f00", "#00bcd4", "#ff6f00", "#00bcd4"], // oscuro, naranja, cyan
+];
+let paletteIndex = 0;
+
+function applyPalette(idx) {
+    const [main, bg1, bg2, accent, bonus, grad1, grad2] = palettes[idx];
+    document.documentElement.style.setProperty('--main-color', main);
+    document.documentElement.style.setProperty('--bg1', bg1);
+    document.documentElement.style.setProperty('--bg2', bg2);
+    document.documentElement.style.setProperty('--accent-color', accent);
+    document.documentElement.style.setProperty('--bonus-color', bonus);
+    document.documentElement.style.setProperty('--title-grad1', grad1);
+    document.documentElement.style.setProperty('--title-grad2', grad2);
+    // Actualiza colores en canvas
+    // (puedes usar estas variables en drawBackground, drawCurvedWalls, etc)
+}
+applyPalette(0);
+
+document.getElementById('paletteBtn').onclick = function() {
+    paletteIndex = (paletteIndex + 1) % palettes.length;
+    applyPalette(paletteIndex);
+    // Redibuja el fondo y todo lo demás automáticamente en el loop
+};
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Responsive canvas
+        function resizeCanvas() {
+            // Calcula el alto del header dinámicamente
+            const header = document.querySelector('.top-container');
+            const headerHeight = header ? header.offsetHeight : 0;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - headerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let antennas = [];
+        let connections = [];
+        let score = 0;
+        let gameOver = false;
+        let previewAntenna = null;
+        let previewConnections = [];
+        let isMouseDown = false;
+        let previewGeneratedAntennas = null;
+        let lastCentral = null;
+
+        // --- MODIFICACIÓN DE LA CLASE ANTENNA ---
+        class Antenna {
+            constructor(x, y, isPreview = false, isCentral = false) {
+                this.x = x;
+                this.y = y;
+                this.isPreview = isPreview;
+                this.isCentral = isCentral;
+            }
+
+            draw() {
+                // Sombra sólida, sin desenfoque, opacidad 40%
+                ctx.save();
+                const shadowY = this.y + (this.isCentral ? 26 : 15);
+                ctx.globalAlpha = 0.4;
+                ctx.fillStyle = '#444';
+                ctx.beginPath();
+                ctx.ellipse(
+                    this.x,
+                    shadowY,
+                    this.isCentral ? 18 : 10, // radioX
+                    this.isCentral ? 5.5 : 3.5, // radioY
+                    0,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.restore();
+
+                ctx.save();
+
+                // (Opcional: puedes quitar la sombra proyectada si quieres solo la elipse)
+                ctx.shadowColor = 'rgba(80, 80, 80, 0.10)';
+                ctx.shadowBlur = this.isCentral ? 8 : 5;
+                ctx.shadowOffsetY = 3;
+
+                ctx.strokeStyle = this.isPreview ? 'rgba(83, 83, 83, 0.3)' : '#535353';
+                ctx.fillStyle = this.isPreview ? 'rgba(83, 83, 83, 0.15)' : '#535353';
+                ctx.lineWidth = this.isCentral ? 3 : 2;
+
+                // Torre: triángulo clásico
+                const base = this.isCentral ? 28 : 16;
+                const height = this.isCentral ? 44 : 26;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - height / 2); // punta arriba
+                ctx.lineTo(this.x - base / 2, this.y + height / 2); // base izq
+                ctx.lineTo(this.x + base / 2, this.y + height / 2); // base der
+                ctx.closePath();
+                ctx.stroke();
+
+                // Traviesas horizontales
+                for (let i = 1; i <= 2; i++) {
+                    const y = this.y + height / 2 - (i * height) / 3;
+                    const x1 = this.x - (base / 2) * (1 - i * 0.2);
+                    const x2 = this.x + (base / 2) * (1 - i * 0.2);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y);
+                    ctx.lineTo(x2, y);
+                    ctx.stroke();
+                }
+
+                // Círculo en la punta
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - height / 2, this.isCentral ? 7 : 4.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            static generateRandomAdyacentes(x, y, count = null) {
+                const num = count ?? (Math.floor(Math.random() * 5) + 1);
+                const antennas = [];
+                for (let i = 0; i < num; i++) {
+                    const angle = (Math.PI * 2 * i) / num + Math.random() * 0.5;
+                    const distance = 70 + Math.random() * 80;
+                    const ax = x + Math.cos(angle) * distance;
+                    const ay = y + Math.sin(angle) * distance;
+                    const clampedX = Math.max(30, Math.min(canvas.width - 30, ax));
+                    const clampedY = Math.max(30, Math.min(canvas.height - 60, ay)); // deja margen para el suelo
+                    antennas.push(new Antenna(clampedX, clampedY, false, false));
+                }
+                return antennas;
+            }
+        }
+
+        function drawConnection(ant1, ant2, isPreview = false) {
+            // Línea base
+            ctx.strokeStyle = isPreview ? 'rgba(83, 83, 0.3)' : '#535353';
+            ctx.lineWidth = isPreview ? 1 : 2;
+            ctx.beginPath();
+            ctx.moveTo(ant1.x, ant1.y);
+            ctx.lineTo(ant2.x, ant2.y);
+            ctx.stroke();
+
+            // Animación sutil: puntos más pequeños y con halo reducido
+            if (!isPreview) {
+                const now = performance.now();
+                const length = Math.hypot(ant2.x - ant1.x, ant2.y - ant1.y);
+                const numDots = Math.max(2, Math.floor(length / 28));
+                for (let i = 0; i < numDots; i++) {
+                    const speed = 0.00018; // velocidad de animación
+                    const t = ((now * speed + i / numDots) % 1);
+                    const x = ant1.x + (ant2.x - ant1.x) * t;
+                    const y = ant1.y + (ant2.y - ant1.y) * t;
+
+                    // Halo exterior (más pequeño)
+                    ctx.save();
+                    ctx.globalAlpha = 0.32;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4.5, 0, Math.PI * 2); // antes: 6
+                    ctx.fillStyle = "#fff";
+                    ctx.fill();
+                    ctx.restore();
+
+                    // Punto central (más pequeño)
+                    ctx.save();
+                    ctx.globalAlpha = 0.85;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2.2, 0, Math.PI * 2); // antes: 3.5
+                    ctx.fillStyle = "#535353";
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        function checkLineIntersection(line1, line2) {
+            const [a, b] = line1;
+            const [c, d] = line2;
+            const denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x);
+            if (Math.abs(denominator) < 1e-10) return false;
+            const t = ((a.x - c.x) * (c.y - d.y) - (a.y - c.y) * (c.x - d.x)) / denominator;
+            const u = -((a.x - b.x) * (a.y - c.y) - (a.y - b.y) * (a.x - c.x)) / denominator;
+            return t > 0.01 && t < 0.99 && u > 0.01 && u < 0.99;
+        }
+
+        // --- MUROS CURVOS ALEATORIOS ---
+let curvedWalls = []; // Cada muro: {cx, cy, r, startAngle, endAngle}
+
+// Dibuja todos los muros
+function drawCurvedWalls() {
+    ctx.save();
+    ctx.strokeStyle = "#535353"; // Cambiado al color de los assets
+    ctx.lineWidth = 7;
+    ctx.shadowColor = "#535353"; // Cambiado al color de los assets
+    ctx.shadowBlur = 8;
+    curvedWalls.forEach(wall => {
+        ctx.beginPath();
+        ctx.arc(wall.cx, wall.cy, wall.r, wall.startAngle, wall.endAngle, false);
+        ctx.stroke();
+    });
+    ctx.restore();
+}
+
+// Devuelve true si el segmento (p1,p2) cruza el arco del muro
+function doesSegmentCrossArc(p1, p2, wall) {
+    // Vector del segmento
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const fx = p1.x - wall.cx;
+    const fy = p1.y - wall.cy;
+
+    // Resolución cuadrática para intersección línea-círculo
+    const a = dx*dx + dy*dy;
+    const b = 2 * (fx*dx + fy*dy);
+    const c = fx*fx + fy*fy - wall.r*wall.r;
+    const discriminant = b*b - 4*a*c;
+    if (discriminant < 0) return false; // No cruza el círculo
+
+    // Calcula los puntos de intersección (pueden ser 0, 1 o 2)
+    const sqrtD = Math.sqrt(discriminant);
+    const t1 = (-b - sqrtD) / (2*a);
+    const t2 = (-b + sqrtD) / (2*a);
+
+    // Solo nos interesan intersecciones dentro del segmento
+    let points = [];
+    if (t1 > 0.01 && t1 < 0.99) {
+        points.push({x: p1.x + dx*t1, y: p1.y + dy*t1});
+    }
+    if (t2 > 0.01 && t2 < 0.99) {
+        points.push({x: p1.x + dx*t2, y: p1.y + dy*t2});
+    }
+    // ¿Algún punto de cruce está dentro del ángulo del arco?
+    for (const pt of points) {
+        let angle = Math.atan2(pt.y - wall.cy, pt.x - wall.cx);
+        // Normaliza ángulos
+        let a0 = wall.startAngle, a1 = wall.endAngle;
+        if (a1 < a0) a1 += Math.PI*2;
+        if (angle < a0) angle += Math.PI*2;
+        if (angle >= a0 && angle <= a1) return true;
+    }
+    return false;
+}
+
+// Modifica checkForCrossings para incluir muros
+function checkForCrossings(newConnections) {
+    const allConnections = [...connections, ...newConnections];
+    for (let i = 0; i < allConnections.length; i++) {
+        for (let j = i + 1; j < allConnections.length; j++) {
+            if (checkLineIntersection(allConnections[i], allConnections[j])) {
+                return true;
+            }
+        }
+        // Chequea cruce con muros
+        for (const wall of curvedWalls) {
+            const [a, b] = allConnections[i];
+            if (doesSegmentCrossArc(a, b, wall)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// --- Utilidad: test de punto en polígono (ray-casting) ---
+function isPointInPolygon(x, y, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+        const intersect = ((yi > y) !== (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi + 1e-12) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+// --- Elimina muros que quedan dentro de áreas cerradas ---
+function removeWallsInsideLoops() {
+    if (!detectedLoops || detectedLoops.length === 0) return;
+    curvedWalls = curvedWalls.filter(wall => {
+        for (const loop of detectedLoops) {
+            if (loop.length >= 3 && isPointInPolygon(wall.cx, wall.cy, loop)) {
+                return false; // El muro está dentro de un área cerrada, se elimina
+            }
+        }
+        return true;
+    });
+}
+
+// Lógica para crear un muro aleatorio (20% de probabilidad) evitando zonas cerradas
+function maybeAddCurvedWall(avoidX, avoidY) {
+    // Sube la probabilidad a ~30%
+    if (Math.random() < 0.30) {
+        let tries = 0;
+        const minR = 38, maxR = 60;
+        const minArc = Math.PI/2;      // 90 grados
+        const maxArc = Math.PI*5/6;    // 150 grados
+        while (tries < 24) {
+            const r = minR + Math.random() * (maxR - minR); // radio 38-60 px
+            const cx = 60 + Math.random() * (canvas.width - 120);
+            const cy = 60 + Math.random() * (canvas.height - 120);
+            if (Math.hypot(cx - avoidX, cy - avoidY) < 120) { tries++; continue; }
+            // Evita muros dentro de áreas cerradas
+            let insideLoop = false;
+            if (detectedLoops && detectedLoops.length > 0) {
+                for (const loop of detectedLoops) {
+                    if (loop.length >= 3 && isPointInPolygon(cx, cy, loop)) {
+                        insideLoop = true;
+                        break;
+                    }
+                }
+            }
+            if (insideLoop) { tries++; continue; }
+            // --- NUEVO: evita muros demasiado cerca de otros muros ---
+            let tooClose = false;
+            for (const wall of curvedWalls) {
+                if (Math.hypot(cx - wall.cx, cy - wall.cy) < 90) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (tooClose) { tries++; continue; }
+            const baseAngle = Math.random() * Math.PI * 2;
+            const arcLen = minArc + Math.random() * (maxArc - minArc); // 90-150 grados
+            const startAngle = baseAngle;
+            const endAngle = baseAngle + arcLen;
+            curvedWalls.push({cx, cy, r, startAngle, endAngle});
+            break;
+        }
+    }
+}
+
+        function checkForCrossings(newConnections) {
+            const allConnections = [...connections, ...newConnections];
+            for (let i = 0; i < allConnections.length; i++) {
+                for (let j = i + 1; j < allConnections.length; j++) {
+                    if (checkLineIntersection(allConnections[i], allConnections[j])) {
+                        return true;
+                    }
+                }
+                // Chequea cruce con muros
+                for (const wall of curvedWalls) {
+                    const [a, b] = allConnections[i];
+                    if (doesSegmentCrossArc(a, b, wall)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function getMainConnections(central, adyacentes) {
+            return adyacentes.map(ant => [central, ant]);
+        }
+
+        // Margen seguro para la antena central (igual que para adyacentes)
+        const CENTRAL_MARGIN_X = 30;
+        const CENTRAL_MARGIN_Y = 30;
+        const CENTRAL_MARGIN_BOTTOM = 60;
+
+        function clampCentralPosition(x, y) {
+            const clampedX = Math.max(CENTRAL_MARGIN_X, Math.min(canvas.width - CENTRAL_MARGIN_X, x));
+            const clampedY = Math.max(CENTRAL_MARGIN_Y, Math.min(canvas.height - CENTRAL_MARGIN_BOTTOM, y));
+            return { x: clampedX, y: clampedY };
+        }
+
+        function placeAntenna(x, y) {
+            if (gameOver) return;
+            // Clamp posición central
+            const { x: cx, y: cy } = clampCentralPosition(x, y);
+            const newCentral = new Antenna(cx, cy, false, true);
+
+            // Generar adyacentes (misma disposición que preview si existe)
+            const generatedAdyacentes = previewGeneratedAntennas
+                ? previewGeneratedAntennas.map(a => new Antenna(a.x, a.y, false, false))
+                : Antenna.generateRandomAdyacentes(cx, cy);
+
+            // Conexiones: central <-> adyacentes
+            const mainConnections = generatedAdyacentes.map(ant => [newCentral, ant]);
+
+            // Conexión con la central anterior (si existe)
+            let centralConnection = [];
+            if (lastCentral) {
+                centralConnection = [[lastCentral, newCentral]];
+            }
+
+            // --- NUEVO: conectar adyacentes por proximidad a cualquier antena ya colocada ---
+            let adyacentesProxConnections = [];
+            if (antennas.length > 0) {
+                // Excluye las nuevas adyacentes y la central actual
+                const allPlacedAntennas = antennas.filter(a => a !== newCentral && !generatedAdyacentes.includes(a));
+                adyacentesProxConnections = connectAdyacentesByProximity(allPlacedAntennas, generatedAdyacentes);
+            }
+
+            if (checkForCrossings([...connections, ...mainConnections, ...centralConnection, ...adyacentesProxConnections])) {
+                endGame();
+                return;
+            }
+
+            antennas.push(newCentral);
+            antennas.push(...generatedAdyacentes);
+            connections.push(...mainConnections);
+            if (centralConnection.length) connections.push(...centralConnection);
+            if (adyacentesProxConnections.length) connections.push(...adyacentesProxConnections);
+
+            score += generatedAdyacentes.length + 1;
+            updateScore();
+
+            lastCentral = newCentral;
+
+            previewAntenna = null;
+            previewConnections = [];
+            previewGeneratedAntennas = null;
+
+            // --- NUEVO: tal vez añade un muro curvo aleatorio ---
+            maybeAddCurvedWall(cx, cy);
+        }
+
+        // Preview: randomiza adyacentes en cada movimiento
+        function updatePreview(x, y) {
+            if (gameOver || !isMouseDown) return;
+            // Clamp posición central
+            const { x: cx, y: cy } = clampCentralPosition(x, y);
+            previewAntenna = new Antenna(cx, cy, true, true);
+
+            // SIEMPRE randomiza adyacentes en cada movimiento
+            previewGeneratedAntennas = Antenna.generateRandomAdyacentes(cx, cy);
+
+            const generatedAdyacentes = previewGeneratedAntennas.map(a => new Antenna(a.x, a.y, true, false));
+            previewConnections = getMainConnections(previewAntenna, generatedAdyacentes);
+        }
+
+        // Elimina la congelación de la preview
+        canvas.addEventListener('mousedown', (e) => {
+            if (gameOver) return;
+            isMouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            updatePreview(x, y);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            updatePreview(x, y);
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (gameOver || !isMouseDown) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            placeAntenna(x, y);
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isMouseDown = false;
+            previewAntenna = null;
+            previewConnections = [];
+            previewGeneratedAntennas = null;
+        });
+
+        // --- SOPORTE TOUCH PARA MÓVIL ---
+canvas.addEventListener('touchstart', function(e) {
+    if (gameOver) return;
+    isMouseDown = true;
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    updatePreview(x, y);
+    e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', function(e) {
+    if (!isMouseDown) return;
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    updatePreview(x, y);
+    e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', function(e) {
+    if (gameOver || !isMouseDown) return;
+    const rect = canvas.getBoundingClientRect();
+    // Usamos el último touch conocido (puede que no haya ninguno en touches)
+    let x, y;
+    if (e.changedTouches && e.changedTouches[0]) {
+        x = e.changedTouches[0].clientX - rect.left;
+        y = e.changedTouches[0].clientY - rect.top;
+    } else {
+        // fallback: centro del canvas
+        x = canvas.width / 2;
+        y = canvas.height / 2;
+    }
+    placeAntenna(x, y);
+    isMouseDown = false;
+    e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', function() {
+    isMouseDown = false;
+    previewAntenna = null;
+    previewConnections = [];
+    previewGeneratedAntennas = null;
+});
+
+        // --- FONDO PLANO (sin suelo ni detalles) ---
+        let bgAnimT = 0;
+function drawBackground() {
+    // Fondo animado
+    bgAnimT += 0.003;
+    const bg1 = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || "#f7f5f3";
+    const bg2 = getComputedStyle(document.documentElement).getPropertyValue('--bg2').trim() || "#e0e0e0";
+    const grad = ctx.createLinearGradient(
+        0, 0,
+        canvas.width, canvas.height * (0.7 + 0.3 * Math.sin(bgAnimT))
+    );
+    grad.addColorStop(0, bg1);
+    grad.addColorStop(1, bg2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // --- Guijarros pequeños, opacos y color antena ---
+    if (
+        !drawBackground.pebbles ||
+        drawBackground.pebblesW !== canvas.width ||
+        drawBackground.pebblesH !== canvas.height
+    ) {
+        const pebbleCount = 16 + Math.floor(Math.random() * 7); // 16 a 22 (más piedras)
+        drawBackground.pebbles = [];
+        for (let i = 0; i < pebbleCount; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const rx = 2 + Math.random() * 1.5; // 2 a 3.5 px
+            const ry = 1.2 + Math.random() * 1; // 1.2 a 2.2 px
+            const rot = Math.random() * Math.PI * 2;
+            drawBackground.pebbles.push({ x, y, rx, ry, rot });
+        }
+        // Brotes de hierba
+        const grassCount = 10 + Math.floor(Math.random() * 5); // 10 a 14 (más brotes)
+        drawBackground.grass = [];
+        for (let i = 0; i < grassCount; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const len = 7 + Math.random() * 7;
+            const blades = 2 + Math.floor(Math.random() * 2); // 2 o 3 hojas
+            drawBackground.grass.push({ x, y, len, blades });
+        }
+        drawBackground.pebblesW = canvas.width;
+        drawBackground.pebblesH = canvas.height;
+    }
+    // Guijarros
+    drawBackground.pebbles.forEach(p => {
+        // Sombra
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = '#888';
+        ctx.beginPath();
+        ctx.ellipse(p.x + 1, p.y + 2, p.rx, p.ry * 0.7, p.rot, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Guijarro (color antena, opaco)
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#535353';
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.rx, p.ry, p.rot, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+    // Brotes de hierba
+    drawBackground.grass.forEach(g => {
+        ctx.save();
+        ctx.strokeStyle = '#535353'; // Mismo color que las antenas
+        ctx.lineWidth = 1;
+        for (let b = 0; b < g.blades; b++) {
+            // Offset lateral para cada hoja
+            const offset = (b - (g.blades - 1) / 2) * 2.5;
+            // Curvatura: cada hoja se curva levemente hacia el centro
+            const baseX = g.x + offset;
+            const baseY = g.y;
+            const tipX = g.x + offset * 0.5; // punta ligeramente hacia el centro
+            const tipY = g.y - g.len;
+            // Control point para la curva (más cerca de la base, curvatura suave)
+            const cpX = g.x + offset * 0.7;
+            const cpY = g.y - g.len * 0.45;
+            ctx.beginPath();
+            ctx.moveTo(baseX, baseY);
+            ctx.quadraticCurveTo(cpX, cpY, tipX, tipY);
+            ctx.stroke();
+            // Opcional: dibujar una ramita pequeña en la base para aspecto de brote
+            if (g.blades === 2 && b === 0) {
+                ctx.beginPath();
+                ctx.moveTo(baseX, baseY - 2);
+                ctx.lineTo(baseX - 1.5, baseY - 5);
+                ctx.stroke();
+            }
+            if (g.blades === 2 && b === 1) {
+                ctx.beginPath();
+                ctx.moveTo(baseX, baseY - 2);
+                ctx.lineTo(baseX + 1.5, baseY - 5);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    });
+}
+
+        // --- CONEXIÓN DE ADYACENTES POR PROXIMIDAD (a cualquier antena ya colocada) ---
+        function connectAdyacentesByProximity(allAntennas, newAdyacentes) {
+            if (!allAntennas || !newAdyacentes) return [];
+            const used = new Set();
+            const connections = [];
+            const maxDistSq = 110 * 110; // Solo conecta si están a menos de 110px
+            for (let i = 0; i < newAdyacentes.length; i++) {
+                let minDist = Infinity;
+                let minIdx = -1;
+                for (let j = 0; j < allAntennas.length; j++) {
+                    if (used.has(j)) continue;
+                    // No conectar consigo mismo ni con otras adyacentes de este pack
+                    if (allAntennas[j] === newAdyacentes[i] || newAdyacentes.includes(allAntennas[j])) continue;
+                    const dx = newAdyacentes[i].x - allAntennas[j].x;
+                    const dy = newAdyacentes[i].y - allAntennas[j].y;
+                    const dist = dx * dx + dy * dy;
+                    if (dist < minDist) {
+                        minDist = dist;
+                        minIdx = j;
+                    }
+                }
+                if (minIdx !== -1 && minDist <= maxDistSq) {
+                    used.add(minIdx);
+                    connections.push([newAdyacentes[i], allAntennas[minIdx]]);
+                }
+            }
+            return connections;
+        }
+
+        // --- Detección y sombreado de loops (circuitos cerrados) ---
+        let detectedLoops = [];
+
+        function findLoops() {
+            // Construye un grafo de adyacencia
+            const adj = new Map();
+            antennas.forEach(a => adj.set(a, []));
+            connections.forEach(([a, b]) => {
+                adj.get(a).push(b);
+                adj.get(b).push(a);
+            });
+
+            const visited = new Set();
+            const loops = [];
+
+            function dfs(node, parent, path, pathSet) {
+                visited.add(node);
+                path.push(node);
+                pathSet.add(node);
+
+                for (const neighbor of adj.get(node)) {
+                    if (neighbor === parent) continue;
+                    if (pathSet.has(neighbor)) {
+                        // Encontrado ciclo: extrae el ciclo
+                        const idx = path.indexOf(neighbor);
+                        if (idx !== -1) {
+                            const loop = path.slice(idx);
+                            // Ordena para evitar duplicados (por rotación)
+                            const sorted = [...loop].sort((a, b) => a.x - b.x || a.y - b.y);
+                            // Chequea si ya existe (por referencia)
+                            if (!loops.some(l => l.length === sorted.length && l.every((n, i) => n === sorted[i]))) {
+                                loops.push(loop.slice());
+                            }
+                        }
+                    } else if (!visited.has(neighbor)) {
+                        dfs(neighbor, node, path, pathSet);
+                    }
+                }
+                path.pop();
+                pathSet.delete(node);
+            }
+
+            antennas.forEach(a => {
+                if (!visited.has(a)) dfs(a, null, [], new Set());
+            });
+
+            return loops;
+        }
+
+        function drawLoops(loops) {
+            ctx.save();
+            ctx.globalAlpha = 0.12; // Menor opacidad por área
+            ctx.globalCompositeOperation = "lighter"; // Modo de mezcla que no oscurece
+            ctx.fillStyle = "#535353";
+            for (const loop of loops) {
+                if (loop.length < 3) continue;
+                ctx.beginPath();
+                ctx.moveTo(loop[0].x, loop[0].y);
+                for (let i = 1; i < loop.length; i++) {
+                    ctx.lineTo(loop[i].x, loop[i].y);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.globalCompositeOperation = "source-over";
+            ctx.restore();
+        }
+
+        // --- Bonificación de loops con bonus creciente y feedback visual ---
+        function canonicalLoopId(loop) {
+            // Ordena los puntos por ángulo respecto al centroide para obtener un id único por área
+            const cx = loop.reduce((sum, a) => sum + a.x, 0) / loop.length;
+            const cy = loop.reduce((sum, a) => sum + a.y, 0) / loop.length;
+            // Crea una copia para no modificar el original
+            const pts = loop.map(a => ({x: a.x, y: a.y}));
+            // Ordena por ángulo respecto al centroide
+            pts.sort((a, b) => {
+                const angleA = Math.atan2(a.y - cy, a.x - cx);
+                const angleB = Math.atan2(b.y - cy, b.x - cx);
+                return angleA - angleB;
+            });
+            // Genera un string único con precisión limitada para evitar problemas de flotantes
+            return pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|');
+        }
+
+        let loopBonusGiven = new Set();
+        let loopBonusFeedbacks = []; // [{x, y, value, time}]
+        function handleLoopBonus(loops) {
+            let newLoops = 0;
+            let totalBonus = 0;
+            let bonusPositions = [];
+            for (const loop of loops) {
+                // Usa el id geométrico canónico
+                const id = canonicalLoopId(loop);
+                if (id && !loopBonusGiven.has(id)) {
+                    newLoops++;
+                    // Calcula centroide para feedback visual
+                    const cx = loop.reduce((sum, a) => sum + a.x, 0) / loop.length;
+                    const cy = loop.reduce((sum, a) => sum + a.y, 0) / loop.length;
+                    bonusPositions.push({x: cx, y: cy, size: loop.length});
+                    loopBonusGiven.add(id);
+                }
+            }
+            if (newLoops > 0) {
+                let perLoopBonus = 10;
+                for (const pos of bonusPositions) {
+                    let bonus = perLoopBonus + pos.size * 2;
+                    bonus = Math.round(bonus * (1 + (loops.length-1)*0.5));
+                    score += bonus;
+                    totalBonus += bonus;
+                    loopBonusFeedbacks.push({x: pos.x, y: pos.y, value: "+"+bonus, time: performance.now()});
+                }
+                updateScore();
+            }
+        }
+
+        // --- Feedback visual de bonus ---
+        function drawLoopBonusFeedbacks() {
+            const now = performance.now();
+            loopBonusFeedbacks = loopBonusFeedbacks.filter(fb => now - fb.time < 1200);
+            for (const fb of loopBonusFeedbacks) {
+                const t = (now - fb.time) / 1200;
+                ctx.save();
+                ctx.globalAlpha = 1 - t;
+                ctx.font = "bold 20px Arial";
+                ctx.fillStyle = "#e6b800";
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.strokeText(fb.value, fb.x, fb.y - 18 - t*30);
+                ctx.fillText(fb.value, fb.x, fb.y - 18 - t*30);
+                ctx.restore();
+            }
+        }
+
+        let particles = [];
+function initParticles() {
+    particles = [];
+    for (let i = 0; i < 48; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: 0.7 + Math.random() * 1.7,
+            alpha: 0.08 + Math.random() * 0.10,
+            speed: 0.08 + Math.random() * 0.10,
+            drift: (Math.random() - 0.5) * 0.2
+        });
+    }
+}
+initParticles();
+window.addEventListener('resize', initParticles);
+
+function drawParticles() {
+    ctx.save();
+    for (const p of particles) {
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = "#444";
+        ctx.fill();
+        p.x += p.drift;
+        p.y -= p.speed;
+        if (p.y < -4) {
+            p.y = canvas.height + 4;
+            p.x = Math.random() * canvas.width;
+        }
+        if (p.x < -4) p.x = canvas.width + 4;
+        if (p.x > canvas.width + 4) p.x = -4;
+    }
+    ctx.restore();
+}
+
+        function draw() {
+            drawBackground(); // Fondo plano
+
+            drawParticles(); // Partículas en el fondo
+
+            drawCurvedWalls(); // Dibuja los muros antes de todo lo demás
+
+            // --- Detección y sombreado de loops ---
+            detectedLoops = findLoops();
+            drawLoops(detectedLoops);
+
+            // --- Elimina muros que quedan dentro de áreas cerradas ---
+            removeWallsInsideLoops();
+
+            handleLoopBonus(detectedLoops);
+            drawLoopBonusFeedbacks();
+
+            // Línea que une las antenas centrales en orden
+            const centrales = antennas.filter(a => a.isCentral);
+            let centralesPreview = [...centrales];
+            if (previewAntenna && !gameOver) {
+                centralesPreview = [...centrales, previewAntenna];
+            }
+            if (centralesPreview.length > 1) {
+                ctx.save();
+                ctx.strokeStyle = '#bdbdbd';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(centralesPreview[0].x, centralesPreview[0].y);
+                for (let i = 1; i < centralesPreview.length; i++) {
+                    ctx.lineTo(centralesPreview[i].x, centralesPreview[i].y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Conexiones existentes
+            connections.forEach(([ant1, ant2]) => drawConnection(ant1, ant2));
+            // Antenas existentes
+            antennas.forEach(antenna => antenna.draw());
+            // Preview
+            if (previewAntenna && !gameOver) {
+                previewConnections.forEach(([ant1, ant2]) => drawConnection(ant1, ant2, true));
+                previewAntenna.draw();
+                if (previewGeneratedAntennas) {
+                    previewGeneratedAntennas.forEach(a => {
+                        const ant = new Antenna(a.x, a.y, true);
+                        ant.draw();
+                    });
+
+                    // --- NUEVO: dibujar conexiones de adyacentes por proximidad en preview (a cualquier antena ya colocada) ---
+                    if (antennas.length > 0) {
+                        const allPlacedAntennas = antennas.filter(a => !previewGeneratedAntennas.includes(a));
+                        const previewAdyacentes = previewGeneratedAntennas.map(a => new Antenna(a.x, a.y, true, false));
+                        const proxPreview = connectAdyacentesByProximity(allPlacedAntennas, previewAdyacentes);
+                        proxPreview.forEach(([a1, a2]) => drawConnection(a1, a2, true));
+                    }
+                }
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function endGame() {
+            gameOver = true;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+            canvas.style.cursor = 'default';
+        }
+
+        function restartGame() {
+            antennas = [];
+            connections = [];
+            score = 0;
+            gameOver = false;
+            previewAntenna = null;
+            previewConnections = [];
+            previewGeneratedAntennas = null;
+            lastCentral = null;
+            curvedWalls = []; // <--- Limpia los muros
+            document.getElementById('gameOver').style.display = 'none';
+            canvas.style.cursor = 'crosshair';
+            isMouseDown = false;
+        }
+
+        // Traducciones
+    const translations = {
+        en: {
+            title: "SIGNAL LOOPS",
+            palette: "Change Palette",
+            lang: "Español",
+            instructions: "Hold click to preview and release to place the antenna. Don't let the lines cross!",
+            restart: "Restart",
+            score: "Score",
+            gameOver: "GAME OVER!",
+            reason: "Lines have crossed",
+            finalScore: "Final score",
+            playAgain: "Play again"
+        },
+        es: {
+            title: "SIGNAL LOOPS",
+            palette: "Cambiar paleta",
+            lang: "English",
+            instructions: "Mantén pulsado el click para ver la vista previa y suelta para colocar la antena. ¡No dejes que las líneas se crucen!",
+            restart: "Reiniciar",
+            score: "Puntuación",
+            gameOver: "¡GAME OVER!",
+            reason: "Las líneas se han cruzado",
+            finalScore: "Puntuación final",
+            playAgain: "Jugar de nuevo"
+        }
+    };
+    let currentLang = "en";
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        const t = translations[lang];
+        document.getElementById('gameTitle').textContent = t.title;
+        document.getElementById('paletteBtn').textContent = t.palette;
+        document.getElementById('langBtn').textContent = t.lang;
+        document.getElementById('instructions').textContent = t.instructions;
+        document.getElementById('restartBtn').textContent = t.restart;
+        document.getElementById('scoreLabel').innerHTML = t.score + ': <span id="score">' + score + '</span>';
+        document.getElementById('gameOverTitle').textContent = t.gameOver;
+        document.getElementById('gameOverReason').textContent = t.reason;
+        document.getElementById('finalScoreLabel').innerHTML = t.finalScore + ': <span id="finalScore">' + score + '</span>';
+        document.getElementById('restartBtn2').textContent = t.playAgain;
+    }
+
+    document.getElementById('langBtn').onclick = function() {
+        setLanguage(currentLang === "en" ? "es" : "en");
+    };
+
+    // Llama al inicio para poner los textos en inglés
+    setLanguage("en");
+
+        function gameLoop() {
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+    </script>
+</body>
+</html>
