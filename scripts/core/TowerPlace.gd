@@ -14,6 +14,9 @@ class_name TowerPlacer
 @export var enable_secondary_poles: bool = true  # Si crear postes secundarios en cadena
 @export var ground_layer: int = 1
 
+# Variables de límites del nivel
+var level_bounds: Area3D = null
+
 var camera: Camera3D
 var placed_towers: Array[Node3D] = []
 
@@ -48,6 +51,7 @@ func _ready():
 	create_preview_tower()
 	create_range_indicator()
 	find_special_towers()
+	find_level_bounds()
 
 func _find_obstacles_recursive(node: Node, obstacles: Array):
 	if node.name.begins_with("Obstacle"):
@@ -146,6 +150,11 @@ func generate_pole_positions(tower_pos: Vector3) -> Array[Vector3]:
 				attempts += 1
 				continue
 			
+			# NUEVA VALIDACIÓN: Verificar que esté dentro de los límites del nivel
+			if not is_position_inside_level_bounds(pole_pos):
+				attempts += 1
+				continue
+			
 			# NUEVA VALIDACIÓN: Verificar que el cable Torre→Poste no cruce cables existentes
 			if would_pole_connection_cross_existing_cables(tower_pos, pole_pos):
 				attempts += 1
@@ -204,6 +213,10 @@ func generate_secondary_pole_position(tower_pos: Vector3, primary_pole_pos: Vect
 		if is_pole_position_blocked(secondary_pos):
 			continue  # Intentar siguiente distancia
 		
+		# Verificar que esté dentro de los límites del nivel
+		if not is_position_inside_level_bounds(secondary_pos):
+			continue  # Intentar siguiente distancia
+		
 		# Verificar que el cable entre postes no cruce obstáculos
 		if would_pole_connection_cross_obstacles(primary_pole_pos, secondary_pos):
 			continue  # Intentar siguiente distancia
@@ -224,7 +237,7 @@ func generate_secondary_pole_position(tower_pos: Vector3, primary_pole_pos: Vect
 			var secondary_pos = primary_pole_pos + rotated_direction * distance
 			secondary_pos.y = get_ground_height(secondary_pos)
 			
-			if not is_pole_position_blocked(secondary_pos) and not would_pole_connection_cross_obstacles(primary_pole_pos, secondary_pos) and not would_pole_connection_cross_existing_cables(primary_pole_pos, secondary_pos):
+			if not is_pole_position_blocked(secondary_pos) and is_position_inside_level_bounds(secondary_pos) and not would_pole_connection_cross_obstacles(primary_pole_pos, secondary_pos) and not would_pole_connection_cross_existing_cables(primary_pole_pos, secondary_pos):
 				return secondary_pos
 	
 	# Si no encontramos ninguna posición válida
@@ -320,6 +333,74 @@ func find_special_towers():
 		print("Torre inicial encontrada: ", start_tower.name)
 	if end_tower:
 		print("Torre final encontrada: ", end_tower.name)
+
+func find_level_bounds():
+	# Buscar el área de límites del nivel
+	var bounds_nodes = get_tree().get_nodes_in_group("level_bounds")
+	if bounds_nodes.size() > 0:
+		level_bounds = bounds_nodes[0]
+		print("Límites del nivel encontrados: ", level_bounds.name)
+	else:
+		print("⚠️ Advertencia: No se encontraron límites de nivel. Agregue un Area3D al grupo 'level_bounds'")
+
+func is_position_inside_level_bounds(pos: Vector3) -> bool:
+	if not level_bounds:
+		return true  # Si no hay límites definidos, permitir en cualquier lugar
+	
+	# Obtener el CollisionShape3D hijo del Area3D
+	var collision_shape = null
+	for child in level_bounds.get_children():
+		if child is CollisionShape3D:
+			collision_shape = child
+			break
+	
+	if not collision_shape or not collision_shape.shape:
+		return true  # Si no hay shape, permitir colocación
+	
+	var shape = collision_shape.shape
+	
+	# Manejar ConvexPolygonShape3D
+	if shape is ConvexPolygonShape3D:
+		var points = shape.points
+		if points.size() < 3:
+			return true
+		
+		# Convertir puntos 3D a 2D (usar X y Z, ignorar Y)
+		var points_2d = []
+		for point in points:
+			points_2d.append(Vector2(point.x, point.z))
+		
+		# Verificar si el punto está dentro del polígono usando ray-casting
+		var test_point = Vector2(pos.x, pos.z)
+		return _point_in_polygon(test_point, points_2d)
+	
+	# Manejar BoxShape3D como fallback
+	elif shape is BoxShape3D:
+		var size = shape.size
+		var bounds_center = level_bounds.global_position
+		
+		return (abs(pos.x - bounds_center.x) <= size.x / 2.0 and
+				abs(pos.z - bounds_center.z) <= size.z / 2.0)
+	
+	return true
+
+func _point_in_polygon(point: Vector2, polygon: Array) -> bool:
+	var x = point.x
+	var y = point.y
+	var inside = false
+	
+	var j = polygon.size() - 1
+	for i in range(polygon.size()):
+		var xi = polygon[i].x
+		var yi = polygon[i].y
+		var xj = polygon[j].x
+		var yj = polygon[j].y
+		
+		if ((yi > y) != (yj > y)) and (x < (xj - xi) * (y - yi) / (yj - yi) + xi):
+			inside = !inside
+		j = i
+	
+	return inside
 
 func _find_towers_recursive(node: Node):
 	# Verificar si este nodo tiene el script de torre inicial o final
@@ -564,7 +645,11 @@ func get_closest_tower_in_range(pos: Vector3) -> Node3D:
 	return closest_tower
 
 func is_position_valid(pos: Vector3) -> bool:
-	# 0. Si el nivel ya se completó, no permitir más torres
+	# 0. Verificar que esté dentro de los límites del nivel
+	if not is_position_inside_level_bounds(pos):
+		return false
+	
+	# 1. Si el nivel ya se completó, no permitir más torres
 	if level_completed:
 		return false
 	
@@ -1261,8 +1346,6 @@ func place_poles_around_tower(tower_pos: Vector3):
 			
 			secondary_pole_connections.append([primary_pos, secondary_pos])
 			placed_poles.append(secondary_pole)
-	
-	print("=== POSTES COLOCADOS COMPLETAMENTE ===")
 
 func create_auto_connections(new_tower: Node3D):
 	var new_pos = new_tower.global_position

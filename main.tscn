@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://s4tk420fsoag"]
+[gd_scene load_steps=19 format=3 uid="uid://s4tk420fsoag"]
 
 [ext_resource type="Script" uid="uid://b1ox4kib6xexv" path="res://scripts/core/TowerPlace.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://y2k6cl2yvsrj" path="res://scripts/core/CameraDrag.gd" id="2_h2yge"]
@@ -49,6 +49,9 @@ size = Vector3(3, 1, 3)
 [sub_resource type="BoxMesh" id="BoxMesh_272bh"]
 size = Vector3(3, 1, 3)
 
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_5vw27"]
+points = PackedVector3Array(33.182, 0, 21.828, 32.724, 0, -5.224, -42.52, 0, -14.485, -47.566, 0, 17.2, 14.155, 0, 24.195)
+
 [node name="Main" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -68,12 +71,6 @@ transform = Transform3D(0.83964, -0.386718, 0.381384, 0, 0.702179, 0.712, -0.543
 
 [node name="Node3D" type="Node3D" parent="Camera3D"]
 script = ExtResource("2_h2yge")
-
-[node name="TowerPlacer" type="Node3D" parent="."]
-transform = Transform3D(0.998569, 0, 0, 0, 0.998569, 0, 0, 0, 0.998569, 0, 0, 0)
-script = ExtResource("1_ig7tw")
-tower_scene = ExtResource("3_kek77")
-pole_scene = ExtResource("4_5vw27")
 
 [node name="Grounds" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.429069, 24.6425)
@@ -316,9 +313,23 @@ script = ExtResource("4_lquwl")
 connection_range = 10.0
 
 [node name="HighVoltageTower_Base01" parent="TowerBegin" instance=ExtResource("3_kek77")]
+transform = Transform3D(0.485817, 0, 0.874061, 0, 1, 0, -0.874061, 0, 0.485817, 0, -0.0864143, 0)
 
 [node name="TowerEnd" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.9902, 0.954574, -6.69961)
 script = ExtResource("5_7mycd")
 
 [node name="HighVoltageTower_Base01" parent="TowerEnd" instance=ExtResource("3_kek77")]
+transform = Transform3D(0.16503, 0, 0.986288, 0, 1, 0, -0.986288, 0, 0.16503, 0, 0, 0)
+
+[node name="TowerPlacer" type="Node3D" parent="."]
+transform = Transform3D(0.998569, 0, 0, 0, 0.998569, 0, 0, 0, 0.998569, 0, 0, 0)
+script = ExtResource("1_ig7tw")
+tower_scene = ExtResource("3_kek77")
+pole_scene = ExtResource("4_5vw27")
+
+[node name="LevelBounds" type="Area3D" parent="." groups=["level_bounds"]]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LevelBounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.516, 0.57486, 1.59)
+shape = SubResource("ConvexPolygonShape3D_5vw27")

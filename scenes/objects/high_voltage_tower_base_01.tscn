@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://einsm6r0ns3s"]
+
+[ext_resource type="PackedScene" uid="uid://bcjtquemseyv7" path="res://assets/HighVoltageTower_Base01.glb" id="1_24aj2"]
+[ext_resource type="Material" uid="uid://c51kffhoj5d0" path="res://assets/Materials/Material.002.tres" id="2_yfmt4"]
+
+[node name="HighVoltageTower_Base01" instance=ExtResource("1_24aj2")]
+
+[node name="HighVoltageTower" parent="." index="0"]
+surface_material_override/0 = ExtResource("2_yfmt4")
