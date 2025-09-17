@@ -1,13 +1,14 @@
-[gd_scene load_steps=19 format=3 uid="uid://s4tk420fsoag"]
+[gd_scene load_steps=20 format=3 uid="uid://s4tk420fsoag"]
 
-[ext_resource type="Script" uid="uid://b1ox4kib6xexv" path="res://scripts/core/TowerPlace.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://dsuus5m0bgbxx" path="res://scripts/core/TowerPlacement.gd" id="2_272bh"]
 [ext_resource type="Script" uid="uid://y2k6cl2yvsrj" path="res://scripts/core/CameraDrag.gd" id="2_h2yge"]
 [ext_resource type="PackedScene" uid="uid://bcjtquemseyv7" path="res://assets/HighVoltageTower_Base01.glb" id="3_kek77"]
-[ext_resource type="PackedScene" uid="uid://csgnv87mgx711" path="res://assets/SmallPost_Base01.glb" id="4_5vw27"]
 [ext_resource type="Script" uid="uid://8t85ia52xerx" path="res://scripts/towers/TowerBegin.gd" id="4_lquwl"]
 [ext_resource type="Script" uid="uid://cx8dwaxqf6pt1" path="res://scripts/towers/TowerEnd.gd" id="5_7mycd"]
 [ext_resource type="Material" uid="uid://2muo70wdk4pm" path="res://assets/Materials/Ground_Desert_01.tres" id="5_272bh"]
 [ext_resource type="Material" uid="uid://csenbt8i1gj6" path="res://assets/Materials/Obs_Desert_01.tres" id="6_5vw27"]
+[ext_resource type="PackedScene" uid="uid://cwp6qpameolca" path="res://scenes/objects/HighVoltageTower.tscn" id="8_kek77"]
+[ext_resource type="PackedScene" uid="uid://dpjkh0r7wfuay" path="res://scenes/objects/SmallPost.tscn" id="9_4c57u"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_7dm0k"]
 sky_top_color = Color(0.324452, 0.607253, 0.751497, 1)
@@ -146,6 +147,18 @@ shape = SubResource("BoxShape3D_7dm0k")
 layers = 4
 material_override = ExtResource("5_272bh")
 mesh = SubResource("BoxMesh_ig7tw")
+
+[node name="Ground7" type="StaticBody3D" parent="Grounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.3287, 2.03023, 7.20941)
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Grounds/Ground7"]
+shape = SubResource("BoxShape3D_7dm0k")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Grounds/Ground7/CollisionShape3D"]
+layers = 4
+mesh = SubResource("BoxMesh_ig7tw")
+surface_material_override/0 = ExtResource("5_272bh")
 
 [node name="ObstacleHighs" type="Node3D" parent="." groups=["ObstacleHigh"]]
 
@@ -308,7 +321,7 @@ material_override = ExtResource("6_5vw27")
 mesh = SubResource("BoxMesh_272bh")
 
 [node name="TowerBegin" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5264, 0.0917997, 13.0722)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5264, 0.115377, 13.0722)
 script = ExtResource("4_lquwl")
 connection_range = 10.0
 
@@ -324,9 +337,14 @@ transform = Transform3D(0.16503, 0, 0.986288, 0, 1, 0, -0.986288, 0, 0.16503, 0,
 
 [node name="TowerPlacer" type="Node3D" parent="."]
 transform = Transform3D(0.998569, 0, 0, 0, 0.998569, 0, 0, 0, 0.998569, 0, 0, 0)
-script = ExtResource("1_ig7tw")
-tower_scene = ExtResource("3_kek77")
-pole_scene = ExtResource("4_5vw27")
+script = ExtResource("2_272bh")
+tower_scene = ExtResource("8_kek77")
+pole_scene = ExtResource("9_4c57u")
+min_tower_distance = 7.0
+pole_radius_min = 3.0
+pole_radius_max = 5.0
+secondary_pole_distance_min = 1.5
+secondary_pole_distance_max = 3.0
 
 [node name="LevelBounds" type="Area3D" parent="." groups=["level_bounds"]]
 
